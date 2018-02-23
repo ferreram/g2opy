@@ -84,6 +84,10 @@ void declareTypesSixDofExpmap(py::module & m) {
         .def("is_depth_positive", &EdgeSE3ProjectXYZ::isDepthPositive)
         .def("linearize_oplus", &EdgeSE3ProjectXYZ::linearizeOplus)
         .def("cam_project", &EdgeSE3ProjectXYZ::cam_project)
+        .def_readwrite("fx", &EdgeSE3ProjectXYZ::fx)
+        .def_readwrite("fy", &EdgeSE3ProjectXYZ::fy)
+        .def_readwrite("cx", &EdgeSE3ProjectXYZ::cx)
+        .def_readwrite("cy", &EdgeSE3ProjectXYZ::cy)
     ;
 
 
