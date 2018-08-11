@@ -121,6 +121,10 @@ namespace g2o {
         tempChi=std::numeric_limits<double>::max();
 
       rho = (currentChi-tempChi);
+
+      if(fabs(rho)<1e-3/*1e-6*/)
+        return Terminate;
+
       double scale = computeScale();
       scale += 1e-3; // make sure it's non-zero :)
       rho /=  scale;

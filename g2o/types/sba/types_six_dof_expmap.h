@@ -129,6 +129,31 @@ class G2O_TYPES_SBA_API EdgeSE3Expmap : public BaseBinaryEdge<6, SE3Quat, Vertex
 };
 
 
+
+/**
+ * \brief 6D edge prior
+ */
+class G2O_TYPES_SBA_API EdgePriorSE3Expmap : public BaseUnaryEdge<6, SE3Quat, VertexSE3Expmap>{
+  public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+      EdgePriorSE3Expmap();
+
+    bool read(std::istream& is);
+
+    bool write(std::ostream& os) const;
+
+    void computeError()  {
+      const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[0]);
+
+      SE3Quat C(_measurement);
+      SE3Quat error_= v1->estimate().inverse()*C;
+      _error = error_.log();
+    }
+
+    // virtual void linearizeOplus();
+};
+
+
 class G2O_TYPES_SBA_API EdgeProjectXYZ2UV : public  BaseBinaryEdge<2, Vector2D, VertexSBAPointXYZ, VertexSE3Expmap>{
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -230,6 +255,42 @@ class EdgeSE3ProjectXYZ : public BaseBinaryEdge<2, Vector2D, VertexSBAPointXYZ, 
   double fx, fy, cx, cy;
 };
 
+
+
+// Projection using focal_length in x and y directions and using the real pose
+class EdgeRealSE3ProjectXYZ : public BaseBinaryEdge<2, Vector2D, VertexSBAPointXYZ, VertexSE3Expmap> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  EdgeRealSE3ProjectXYZ();
+
+  bool read(std::istream &is);
+
+  bool write(std::ostream &os) const;
+
+  void computeError() {
+    const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[1]);
+    const VertexSBAPointXYZ *v2 = static_cast<const VertexSBAPointXYZ *>(_vertices[0]);
+    Vector2D obs(_measurement);
+    _error = obs - cam_project(v1->estimate().inverse().map(v2->estimate()));
+  }
+
+  bool isDepthPositive() {
+    const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[1]);
+    const VertexSBAPointXYZ *v2 = static_cast<const VertexSBAPointXYZ *>(_vertices[0]);
+    return (v1->estimate().inverse().map(v2->estimate()))(2) > 0.0;
+  }
+
+  virtual void linearizeOplus();
+
+  Vector2D cam_project(const Vector3D &trans_xyz) const;
+
+  double fx, fy, cx, cy;
+};
+
+
+
+
 // Edge to optimize only the camera pose
 class EdgeSE3ProjectXYZOnlyPose : public BaseUnaryEdge<2, Vector2D, VertexSE3Expmap> {
  public:
@@ -259,6 +320,104 @@ class EdgeSE3ProjectXYZOnlyPose : public BaseUnaryEdge<2, Vector2D, VertexSE3Exp
   Vector3D Xw;
   double fx, fy, cx, cy;
 };
+
+
+
+// Edge to optimize only the camera pose
+class EdgeRealSE3ProjectXYZOnlyPose : public BaseUnaryEdge<2, Vector2D, VertexSE3Expmap> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  EdgeRealSE3ProjectXYZOnlyPose() {}
+
+  bool read(std::istream &is);
+
+  bool write(std::ostream &os) const;
+
+  void computeError() {
+    const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
+    Vector2D obs(_measurement);
+    _error = obs - cam_project(v1->estimate().inverse().map(Xw));
+  }
+
+  bool isDepthPositive() {
+    const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
+    return (v1->estimate().inverse().map(Xw))(2) > 0.0;
+  }
+
+  virtual void linearizeOplus();
+
+  Vector2D cam_project(const Vector3D &trans_xyz) const;
+
+  Vector3D Xw;
+  double fx, fy, cx, cy;
+};
+
+
+// Edge to optimize only the z position in the world frame
+class EdgeRealSE3Depth : public BaseUnaryEdge<3, Vector3D, VertexSE3Expmap> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  EdgeRealSE3Depth() {};
+
+  bool read(std::istream &is);
+
+  bool write(std::ostream &os) const;
+
+  // virtual void setMeasurement(const double& m){
+  //     _measurement = m;
+  // }
+
+  void computeError() {
+    const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
+
+    g2o::SE3Quat T = v1->estimate();
+
+    Eigen::Vector3d t = T.translation();
+    
+    // _error[0] =  _measurement - t.z();
+    _error = _measurement - t;
+  }
+
+  virtual void linearizeOplus();
+};
+
+
+
+// Edge to optimize only the z position in the world frame
+// class EdgetoEdgeRealSE3Depth : public BaseBinaryEdge<1, double, VertexSE3Expmap, VertexSE3Expmap> {
+//  public:
+//   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+//   EdgetoEdgeRealSE3Depth() {};
+
+//   bool read(std::istream &is);
+
+//   bool write(std::ostream &os) const;
+
+//   virtual void setMeasurement(const double& m){
+//       _measurement = m;
+//   }
+
+//   void computeError() {
+//     const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
+//     const VertexSE3Expmap *v2 = static_cast<const VertexSE3Expmap *>(_vertices[1]);
+
+//     g2o::SE3Quat T1 = v1->estimate();
+//     Eigen::Vector3d t1 = T1.translation();
+
+//     g2o::SE3Quat T2 = v2->estimate();
+//     Eigen::Vector3d t2 = T2.translation();
+    
+//     double err = _measurement - (t2.z() - t1.z());
+
+//     _error[0] = err;
+//   }
+
+//   virtual void linearizeOplus();
+// };
+
 
 // Projection using focal_length in x and y directions stereo
 class EdgeStereoSE3ProjectXYZ : public BaseBinaryEdge<3, Vector3D, VertexSBAPointXYZ, VertexSE3Expmap> {

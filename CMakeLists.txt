@@ -137,12 +137,12 @@ ENDIF(G2O_USE_OPENMP)
 # OpenGL is used in the draw actions for the different types, as well
 # as for creating the GUI itself
 FIND_PACKAGE(OpenGL)
-SET(G2O_USE_OPENGL ON CACHE BOOL "Build g2o with OpenGL support for visualization")
-IF (OPENGL_FOUND AND G2O_USE_OPENGL)
-  SET (G2O_HAVE_OPENGL 1)
-  INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
-  MESSAGE(STATUS "Compiling with OpenGL support")
-ENDIF()
+SET(G2O_USE_OPENGL OFF CACHE BOOL "Build g2o with OpenGL support for visualization")
+#IF (OPENGL_FOUND AND G2O_USE_OPENGL)
+#  SET (G2O_HAVE_OPENGL 1)
+#  INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
+#  MESSAGE(STATUS "Compiling with OpenGL support")
+#ENDIF()
 
 # For building the GUI
 FIND_PACKAGE(QGLViewer)
@@ -168,7 +168,7 @@ OPTION(G2O_NO_IMPLICIT_OWNERSHIP_OF_OBJECTS "Disables memory management in the g
 
 # Compiler specific options for gcc
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  OPTION (BUILD_WITH_MARCH_NATIVE "Build with \"-march native\"" ON)
+  OPTION (BUILD_WITH_MARCH_NATIVE "Build with \"-march native\"" OFF)
   MESSAGE(STATUS "Compiling with GCC")
   
   IF(NOT "${ARCH}" MATCHES "arm")

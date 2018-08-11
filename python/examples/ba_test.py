@@ -22,9 +22,9 @@ args = parser.parse_args()
 def main():
     
     optimizer = g2o.SparseOptimizer()
-    solver = g2o.BlockSolverSE3(g2o.LinearSolverEigenSE3())
+    # solver = g2o.BlockSolverSE3(g2o.LinearSolverEigenSE3())
     solver = g2o.BlockSolverSE3(g2o.LinearSolverCholmodSE3())
-    solver = g2o.BlockSolverSE3(g2o.LinearSolverCSparseSE3())
+    # solver = g2o.BlockSolverSE3(g2o.LinearSolverCSparseSE3())
     solver = g2o.OptimizationAlgorithmLevenberg(solver)
     optimizer.set_algorithm(solver)
 
@@ -37,9 +37,9 @@ def main():
     delta = np.sqrt(5.991)   
 
     true_points = np.hstack([
-        np.random.random((500, 1)) * 3 - 1.5,
-        np.random.random((500, 1)) - 0.5,
-        np.random.random((500, 1)) + 3])
+        np.random.random((25, 1)) * 3 - 1.5,
+        np.random.random((25, 1)) - 0.5,
+        np.random.random((25, 1)) + 3])
 
 
     fx = 600.
@@ -65,6 +65,7 @@ def main():
             v_se3.set_fixed(True)
         optimizer.add_vertex(v_se3)
 
+    print(optimizer.vertices())
 
     point_id = num_pose
     inliers = dict()
@@ -129,26 +130,17 @@ def main():
     print('num vertices:', len(optimizer.vertices()))
     print('num edges:', len(optimizer.edges()))
 
+    print(optimizer.vertices())
+    
+    print()
+
     print('Performing full BA:')
+    
+    
     optimizer.initialize_optimization()
     optimizer.set_verbose(True)
     optimizer.optimize(5)
 
-    for e in vp_edge:
-    
-        if e.chi2 > 5.991 or not e.is_depth_positive:
-        
-            e.set_level(1)
-            
-        # e.set_robust_kernel(None)
-        
-        # optimizer.add_edge(e)
-
-    print('Performing BA on inliers:')
-    optimizer.initialize_optimization()
-    optimizer.set_verbose(True)
-    optimizer.optimize(5)
-    
     for i in inliers:
         vp = optimizer.vertex(i)
         error = vp.estimate() - true_points[inliers[i]]
@@ -157,6 +149,66 @@ def main():
     print('\nRMSE (inliers only):')
     print('before optimization:', np.sqrt(sse[0] / len(inliers)))
     print('after  optimization:', np.sqrt(sse[1] / len(inliers)))
+    
+    # print(optimizer.vertices())
+
+    print()
+    
+    for i in xrange(num_pose):
+        print(optimizer.vertex(i).estimate().inverse().matrix())
+        
+        
+    j = num_pose
+    for i in xrange(len(inliers)):
+        print(optimizer.vertex(j).estimate().shape)
+        j += 1
+        
+    i = 0
+    """
+    
+    n_inliers = {}
+
+    for e in optimizer.edges():
+    
+        if e.chi2() > 5.991 or not e.is_depth_positive():
+        
+            print(e.vertices()[0].id())
+        
+            optimizer.remove_edge(e)
+            
+            i += 1
+        else:
+            if not n_inliers.has_key(e.vertices()[0].id()):
+                n_inliers[e.vertices()[0].id()] = inliers[e.vertices()[0].id()]
+                error = vp.estimate() - true_points[i]
+                sse[0] += np.sum(error**2)
+            
+            e.set_robust_kernel(None)
+        
+        # optimizer.add_edge(e)
+
+    print("Outliers # : {0}".format(i))
+    print("Inliers # : {0}".format(len(n_inliers)))
+
+    # print(optimizer.vertices())
+
+    print()
+
+    print('Performing BA on inliers:')
+    # optimizer.initialize_optimization(0)
+    
+    optimizer.set_verbose(True)
+    optimizer.optimize(5)
+    
+    for i in n_inliers:
+        vp = optimizer.vertex(i)
+        error = vp.estimate() - true_points[n_inliers[i]]
+        sse[1] += np.sum(error**2)
+
+    print('\nRMSE (inliers only):')
+    print('before optimization:', np.sqrt(sse[0] / len(n_inliers)))
+    print('after  optimization:', np.sqrt(sse[1] / len(n_inliers)))
+    """
                     
 
 
