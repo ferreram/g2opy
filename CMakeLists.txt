@@ -276,6 +276,10 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${g2o_C_FLAGS}")
 # Find Eigen3
 FIND_PACKAGE(Eigen3 REQUIRED)
 
+
+# add_definitions(-DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT)
+
+
 # Set up the top-level include directories
 INCLUDE_DIRECTORIES(${g2o_SOURCE_DIR} ${EIGEN3_INCLUDE_DIR})
 
@@ -294,5 +298,5 @@ INSTALL(FILES ${PROJECT_BINARY_DIR}/g2o/config.h DESTINATION ${CMAKE_INSTALL_PRE
 ADD_SUBDIRECTORY(EXTERNAL)
 ADD_SUBDIRECTORY(g2o)
 
-ADD_SUBDIRECTORY(contrib)   # added for python binding
-ADD_SUBDIRECTORY(python)   # added for python binding
+# ADD_SUBDIRECTORY(contrib)   # added for python binding
+# ADD_SUBDIRECTORY(python)   # added for python binding
