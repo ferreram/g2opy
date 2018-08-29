@@ -136,7 +136,8 @@ class G2O_TYPES_SBA_API EdgeSE3Expmap : public BaseBinaryEdge<6, SE3Quat, Vertex
 class G2O_TYPES_SBA_API EdgePriorSE3Expmap : public BaseUnaryEdge<6, SE3Quat, VertexSE3Expmap>{
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-      EdgePriorSE3Expmap();
+    
+    EdgePriorSE3Expmap();
 
     bool read(std::istream& is);
 

@@ -537,35 +537,10 @@ void EdgeRealSE3ProjectXYZ::linearizeOplus() {
 
   Matrix<double,3,6> J_temp;
 
-  J_temp.leftCols(3) = Xw_screw;
-  J_temp.rightCols(3) = I_3x3 * -1.;
+  J_temp.leftCols(3) = Rt * Xw_screw;
+  J_temp.rightCols(3) = -1. * Rt;
 
-  _jacobianOplusXj = -1. * J_proj * Rt * J_temp;
-
-  // Matrix<double, 2, 3> tmp;
-  // tmp(0, 0) = fx;
-  // tmp(0, 1) = 0;
-  // tmp(0, 2) = -x / z * fx;
-
-  // tmp(1, 0) = 0;
-  // tmp(1, 1) = fy;
-  // tmp(1, 2) = -y / z * fy;
-
-  // _jacobianOplusXi = -1. / z * tmp * T.rotation().toRotationMatrix();
-
-  // _jacobianOplusXj(0, 0) = x * y / z_2 * fx;
-  // _jacobianOplusXj(0, 1) = -(1 + (x * x / z_2)) * fx;
-  // _jacobianOplusXj(0, 2) = y / z * fx;
-  // _jacobianOplusXj(0, 3) = -1. / z * fx;
-  // _jacobianOplusXj(0, 4) = 0;
-  // _jacobianOplusXj(0, 5) = x / z_2 * fx;
-
-  // _jacobianOplusXj(1, 0) = (1 + y * y / z_2) * fy;
-  // _jacobianOplusXj(1, 1) = -x * y / z_2 * fy;
-  // _jacobianOplusXj(1, 2) = -x / z * fy;
-  // _jacobianOplusXj(1, 3) = 0;
-  // _jacobianOplusXj(1, 4) = -1. / z * fy;
-  // _jacobianOplusXj(1, 5) = y / z_2 * fy;
+  _jacobianOplusXj = -1. * J_proj * J_temp;
 }
 
 
@@ -706,66 +681,10 @@ void EdgeRealSE3ProjectXYZOnlyPose::linearizeOplus() {
 
   Matrix<double,3,6> J_temp;
 
-  J_temp.leftCols(3) = Xw_screw;
-  J_temp.rightCols(3) = I_3x3 * -1.;
+  J_temp.leftCols(3) = Rt * Xw_screw;
+  J_temp.rightCols(3) = -1. * Rt;
 
-  _jacobianOplusXi = -1. * J_proj * Rt * J_temp;
-
-  // double r11 = R(0,0);
-  // double r12 = R(0,1);
-  // double r13 = R(0,2);
-  // double r21 = R(1,0);
-  // double r22 = R(1,1);
-  // double r23 = R(1,2);
-  // double r31 = R(2,0);
-  // double r32 = R(2,1);
-  // double r33 = R(2,2);
-
-  // Matrix<double, 3, 3> Rt;   
-
-  // Rt = R.transpose();
-
-  // double rt11 = -Rt(0,0);
-  // double rt12 = -Rt(0,1);
-  // double rt13 = -Rt(0,2);
-  // double rt21 = -Rt(1,0);
-  // double rt22 = -Rt(1,1);
-  // double rt23 = -Rt(1,2);
-  // double rt31 = -Rt(2,0);
-  // double rt32 = -Rt(2,1);
-  // double rt33 = -Rt(2,2);
-
-  // double a1 = r21*zw - r31*yw;
-  // double a2 = r22*zw - r32*yw;
-  // double a3 = r23*zw - r33*yw;
-
-  // double b1 = r31*xw - r11*zw;
-  // double b2 = r32*xw - r12*zw;
-  // double b3 = r33*xw - r13*zw;
-
-  // double c1 = r11*yw - r21*xw;
-  // double c2 = r12*yw - r22*xw;
-  // double c3 = r13*yw - r23*xw;
-
-  // double h11 = fx * invz;
-  // double h13 = -fx * x * invz_2;
-
-  // double h22 = fy * invz;
-  // double h23 = -fy * y * invz_2;
-
-  // _jacobianOplusXi(0, 0) = -(h11 * a1 + h13 * a3);
-  // _jacobianOplusXi(0, 1) = -(h11 * b1 + h13 * b3);
-  // _jacobianOplusXi(0, 2) = -(h11 * c1 + h13 * c3);
-  // _jacobianOplusXi(0, 3) = -(h11 * rt11 + h13 * rt31);
-  // _jacobianOplusXi(0, 4) = -(h11 * rt12 + h13 * rt32);
-  // _jacobianOplusXi(0, 5) = -(h11 * rt13 + h13 * rt33);
-
-  // _jacobianOplusXi(1, 0) = -(h22 * a2 + h23 * a3);
-  // _jacobianOplusXi(1, 1) = -(h22 * b2 + h23 * b3);
-  // _jacobianOplusXi(1, 2) = -(h22 * c2 + h23 * c3);
-  // _jacobianOplusXi(1, 3) = -(h22 * rt21 + h23 * rt31);
-  // _jacobianOplusXi(1, 4) = -(h22 * rt22 + h23 * rt32);
-  // _jacobianOplusXi(1, 5) = -(h22 * rt23 + h23 * rt33);
+  _jacobianOplusXi = -1. * J_proj * J_temp;
 }
 
 
