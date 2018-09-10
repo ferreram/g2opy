@@ -765,10 +765,10 @@ bool EdgeSE3Depth::write(std::ostream &os) const {
   return os.good();
 }
 
-void EdgeSE3Depth::linearizeOplus() {
-  _jacobianOplusXi = Matrix<double,1,6>::Zero();
-  _jacobianOplusXi(0,5) = -1;
-}
+// void EdgeSE3Depth::linearizeOplus() {
+//   _jacobianOplusXi = Matrix<double,1,6>::Zero();
+//   _jacobianOplusXi(0,5) = -1;
+// }
 
 
 // bool EdgetoEdgeRealSE3Depth::read(std::istream &is) {

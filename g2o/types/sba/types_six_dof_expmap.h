@@ -155,6 +155,7 @@ class G2O_TYPES_SBA_API EdgePriorSE3Expmap : public BaseUnaryEdge<6, SE3Quat, Ve
 };
 
 
+
 class G2O_TYPES_SBA_API EdgeProjectXYZ2UV : public  BaseBinaryEdge<2, Vector2D, VertexSBAPointXYZ, VertexSE3Expmap>{
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -369,16 +370,48 @@ class EdgeSE3Depth : public BaseUnaryEdge<1, double, VertexSE3Expmap> {
   void computeError() {
     const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
 
+    // g2o::SE3Quat T = v1->estimate();
+    g2o::SE3Quat T = v1->estimate().inverse();
+
+    Eigen::Vector3d t = T.translation();
+    
+    _error[0] =  _measurement - t.z();
+  }
+
+  // virtual void linearizeOplus();
+};
+
+
+
+// Edge to optimize only the z position in the world frame
+class EdgeSE3RealDepth : public BaseUnaryEdge<1, double, VertexSE3Expmap> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  EdgeSE3RealDepth() {}
+  
+  bool read(std::istream &is) {
+    return false;
+  }
+
+  bool write(std::ostream &os) const {
+    return false;
+  }
+
+  void computeError() {
+    const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
+
+    // g2o::SE3Quat T = v1->estimate();
     g2o::SE3Quat T = v1->estimate();
 
     Eigen::Vector3d t = T.translation();
     
     _error[0] =  _measurement - t.z();
-    // _error = _measurement - t;
   }
 
-  virtual void linearizeOplus();
+  // virtual void linearizeOplus();
 };
+
 
 
 // Edge to optimize only the z position in the world frame
@@ -399,6 +432,42 @@ class EdgeSE3DepthDiff : public BaseUnaryEdge<1, double, VertexSE3Expmap> {
   void computeError() {
     const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
 
+    // g2o::SE3Quat T = v1->estimate();
+    g2o::SE3Quat T = v1->estimate().inverse();
+
+    Eigen::Vector3d t = T.translation();
+    
+    _error[0] =  (_measurement - kf_depth) - (t.z() - kf_visual_z);
+  }
+
+  // virtual void linearizeOplus() {
+  //   _jacobianOplusXi = Eigen::Matrix<double,1,6>::Zero();
+  //   _jacobianOplusXi(0,5) = -1;
+  // }
+
+  double kf_depth;
+  double kf_visual_z;
+};
+
+
+class EdgeSE3RealDepthDiff : public BaseUnaryEdge<1, double, VertexSE3Expmap> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  EdgeSE3RealDepthDiff() {}
+
+  bool read(std::istream &is) {
+    return false;
+  }
+
+  bool write(std::ostream &os) const {
+    return false;
+  }
+
+  void computeError() {
+    const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
+
+    // g2o::SE3Quat T = v1->estimate();
     g2o::SE3Quat T = v1->estimate();
 
     Eigen::Vector3d t = T.translation();
@@ -406,14 +475,15 @@ class EdgeSE3DepthDiff : public BaseUnaryEdge<1, double, VertexSE3Expmap> {
     _error[0] =  (_measurement - kf_depth) - (t.z() - kf_visual_z);
   }
 
-  virtual void linearizeOplus() {
-    _jacobianOplusXi = Eigen::Matrix<double,1,6>::Zero();
-    _jacobianOplusXi(0,5) = -1;
-  }
+  // virtual void linearizeOplus() {
+  //   _jacobianOplusXi = Eigen::Matrix<double,1,6>::Zero();
+  //   _jacobianOplusXi(0,5) = -1;
+  // }
 
   double kf_depth;
   double kf_visual_z;
 };
+
 
 
 // Edge to optimize only the z position in the world frame
@@ -435,10 +505,61 @@ class EdgeBinSE3DepthDiff : public BaseBinaryEdge<1, double, VertexSE3Expmap, Ve
     const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
     const VertexSE3Expmap *v2 = static_cast<const VertexSE3Expmap *>(_vertices[1]);
 
+    // g2o::SE3Quat Tcur = v1->estimate();
+    g2o::SE3Quat Tcur = v1->estimate().inverse();
+
+    Eigen::Vector3d tcur = Tcur.translation();
+
+    // g2o::SE3Quat Tprev = v2->estimate();
+    g2o::SE3Quat Tprev = v2->estimate().inverse();
+
+    Eigen::Vector3d tprev = Tprev.translation();
+    
+    _error[0] =  (_measurement - kf_depth) - (tcur.z() - tprev.z());
+  }
+
+  // virtual void linearizeOplus() {
+  //   _jacobianOplusXi = Eigen::Matrix<double,1,6>::Zero();
+  //   _jacobianOplusXj = Eigen::Matrix<double,1,6>::Zero();
+
+  //   // Jcur
+  //   _jacobianOplusXi(0,5) = -1;
+
+  //   // Jprev
+  //   _jacobianOplusXj(0,5) = 1;
+  // }
+
+  double kf_depth;
+};
+
+
+
+
+// Edge to optimize only the z position in the world frame
+class EdgeBinSE3RealDepthDiff : public BaseBinaryEdge<1, double, VertexSE3Expmap, VertexSE3Expmap> {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  EdgeBinSE3RealDepthDiff() {}
+
+  bool read(std::istream &is) {
+    return false;
+  }
+
+  bool write(std::ostream &os) const {
+    return false;
+  }
+
+  void computeError() {
+    const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
+    const VertexSE3Expmap *v2 = static_cast<const VertexSE3Expmap *>(_vertices[1]);
+
+    // g2o::SE3Quat Tcur = v1->estimate();
     g2o::SE3Quat Tcur = v1->estimate();
 
     Eigen::Vector3d tcur = Tcur.translation();
 
+    // g2o::SE3Quat Tprev = v2->estimate();
     g2o::SE3Quat Tprev = v2->estimate();
 
     Eigen::Vector3d tprev = Tprev.translation();
@@ -446,20 +567,19 @@ class EdgeBinSE3DepthDiff : public BaseBinaryEdge<1, double, VertexSE3Expmap, Ve
     _error[0] =  (_measurement - kf_depth) - (tcur.z() - tprev.z());
   }
 
-  virtual void linearizeOplus() {
-    _jacobianOplusXi = Eigen::Matrix<double,1,6>::Zero();
-    _jacobianOplusXj = Eigen::Matrix<double,1,6>::Zero();
+  // virtual void linearizeOplus() {
+  //   _jacobianOplusXi = Eigen::Matrix<double,1,6>::Zero();
+  //   _jacobianOplusXj = Eigen::Matrix<double,1,6>::Zero();
 
-    // Jcur
-    _jacobianOplusXi(0,5) = -1;
+  //   // Jcur
+  //   _jacobianOplusXi(0,5) = -1;
 
-    // Jprev
-    _jacobianOplusXj(0,5) = 1;
-  }
+  //   // Jprev
+  //   _jacobianOplusXj(0,5) = 1;
+  // }
 
   double kf_depth;
 };
-
 
 
 
@@ -481,7 +601,7 @@ class EdgeSE3DepthScale : public BaseUnaryEdge<3, double, VertexSE3Expmap> {
   void computeError() {
     const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[0]);
 
-    g2o::SE3Quat T = v1->estimate();
+    g2o::SE3Quat T = v1->estimate().inverse();
 
     Eigen::Vector3d t = T.translation();
 
@@ -490,15 +610,15 @@ class EdgeSE3DepthScale : public BaseUnaryEdge<3, double, VertexSE3Expmap> {
     _error = lambda_ * t - t;
   }
 
-  virtual void linearizeOplus() {
-    _jacobianOplusXi = Eigen::Matrix<double,3,6>::Zero();
+  // virtual void linearizeOplus() {
+  //   _jacobianOplusXi = Eigen::Matrix<double,3,6>::Zero();
     
-    double jac = 1 - lambda_;
+  //   double jac = 1 - lambda_;
 
-    _jacobianOplusXi(0,3) = jac;
-    _jacobianOplusXi(1,4) = jac;
-    _jacobianOplusXi(2,5) = jac;
-  }
+  //   _jacobianOplusXi(0,3) = jac;
+  //   _jacobianOplusXi(1,4) = jac;
+  //   _jacobianOplusXi(2,5) = jac;
+  // }
 
   double lambda_;
 };
