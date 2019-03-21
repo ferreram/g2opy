@@ -280,6 +280,8 @@ class EdgeRealSE3ProjectXYZ : public BaseBinaryEdge<2, Vector2D, VertexSBAPointX
   bool isDepthPositive() {
     const VertexSE3Expmap *v1 = static_cast<const VertexSE3Expmap *>(_vertices[1]);
     const VertexSBAPointXYZ *v2 = static_cast<const VertexSBAPointXYZ *>(_vertices[0]);
+    // std::cout << "\nPose estimate : " << v1->estimate();
+    // std::cout << "\nPoint estimate : " << v2->estimate();
     return (v1->estimate().inverse().map(v2->estimate()))(2) > 0.0;
   }
 

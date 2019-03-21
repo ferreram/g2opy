@@ -27,6 +27,8 @@
 #ifndef G2O_SE3QUAT_H_
 #define G2O_SE3QUAT_H_
 
+#include <iostream>
+
 #include "se3_ops.h"
 
 #include <Eigen/Core>
@@ -213,6 +215,9 @@ namespace g2o {
 
       Vector3D map(const Vector3D & xyz) const
       {
+        // std::cout << "\nRotation : " << _r.toRotationMatrix();
+        // std::cout << "\nTranslation : " << _t;
+        // std::cout << "\nPoint : " << xyz;
         return _r*xyz + _t;
       }
 
